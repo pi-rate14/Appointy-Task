@@ -36,24 +36,80 @@ type GlobalID struct {
 
 var ID GlobalID
 
-func homePage(w http.ResponseWriter, r *http.Request){
-	fmt.Fprint(w,"Homepage endpoint hit")
+func handle404(w http.ResponseWriter, r *http.Request){
+	fmt.Fprint(w,"404 not found")
 }
 
 func handleRequests() {
-	http.HandleFunc("/", homePage)
-	http.HandleFunc("/users", GetUsers)
+	http.HandleFunc("/", handle404)
+	http.HandleFunc("/users", handleUsers)
 	http.HandleFunc("/users/", GetUser)
+	http.HandleFunc("/posts", handlePosts)
 	http.HandleFunc("/posts/", GetPost)
 	http.HandleFunc("/posts/users/", FindUserPosts)
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
+func handleUsers(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		CreateUser(w, r)
+		return
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		resp := make(map[string]string)
+		resp["message"] = "Bad Request. Id missing"
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+		return
+	}
+}
+
+func handlePosts(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		CreatePost(w, r)
+		return
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		resp := make(map[string]string)
+		resp["message"] = "Bad Request. Id missing"
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+		return
+	}
+}
+
+func setIDS(){
+	user_count, err  := UsersCollection.CountDocuments(Ctx, bson.M{}, nil)
+	if err != nil {
+        log.Fatal(err)
+    } 
+	fmt.Println(user_count)
+		ID.userId = int(user_count)+1
+	post_count, err  := PostsCollection.CountDocuments(Ctx, bson.M{}, nil)
+	if err != nil {
+        log.Fatal(err)
+    } 
+	fmt.Println(post_count)
+	ID.postId = int(post_count)+1
+	
+	// fmt.Println(UsersCollection.FindOne(Ctx, bson.M{"$natural": -1})) 
+	// fmt.Println(PostsCollection.FindOne(Ctx, bson.M{"$natural": -1})) 
+}
+
 func main() {
 	client := openDB()
 	defer CloseClientDB(client)
-	ID.userId = 0
-	ID.postId = 0
+	setIDS()
 	handleRequests()
 
 	// user := User {
@@ -123,14 +179,20 @@ func openDB()  *mongo.Client {
 	
 }
 
-func CreateUser(user User) (string, error) {
-	ID.userId +=1
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	//var user User
+	user := User {
+			ID: ID.userId,
+			Name: "Apoorva Srivastava",
+			Email: "apoorvasrivastava.14@gmail.com",
+			Password: "password",
+		}
 	user.ID = ID.userId
 	result, err := UsersCollection.InsertOne(Ctx, user)
 	if err != nil {
-		return "0", err
+		log.Fatal(err)
 	}
-	return 	fmt.Sprintf("%v", result.InsertedID), err
+	json.NewEncoder(w).Encode(result.InsertedID)
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request){
@@ -175,9 +237,15 @@ func GetUsers(w http.ResponseWriter, r *http.Request)  {
 	//return users, nil
 }
 
-func CreatePost(post Post) (string, error) {
-	ID.postId +=1
-	post.ID = ID.postId
+func CreatePost(w http.ResponseWriter, r *http.Request) (string, error) {
+	post := Post {
+		ID: ID.postId,
+		Caption: "Test Caption",
+		ImageURL: "www.google.com",
+		CreatedAt: time.Now(),
+		UserId: ID.userId,
+	}
+	//.ID = ID.postId
 	post.UserId = ID.userId
 	result, err := PostsCollection.InsertOne(Ctx, post)
 	if err != nil {
@@ -189,6 +257,18 @@ func CreatePost(post Post) (string, error) {
 func GetPost(w http.ResponseWriter, r *http.Request) {
 	var post Post
 	id := strings.TrimPrefix(r.URL.Path, "/posts/")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		resp := make(map[string]string)
+		resp["message"] = "Bad Request. ID missing."
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+		return
+	}
 	objectId,err := strconv.Atoi(id)
 	if err != nil {
 		//return post, err
@@ -227,10 +307,7 @@ func GetPosts() ([]Post, error) {
 	return posts, nil
 }
 
-type AuthorBooks struct {
-	userID int		`bson:"user_id"`
-	Posts []Post
-}
+
 
 // func FindUserPosts(user_id int) ([]Post, error) {
 // 	matchStage := bson.D{{"$match", bson.D{{"user_id", user_id}}}}
@@ -258,6 +335,18 @@ type AuthorBooks struct {
 func FindUserPosts(w http.ResponseWriter, r *http.Request)  {
 	var posts []bson.M
 	id := strings.TrimPrefix(r.URL.Path, "/posts/users/")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		resp := make(map[string]string)
+		resp["message"] = "Bad Request. ID missing."
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+		return
+	}
 	user_id,err := strconv.Atoi(id)
 	if err != nil{
 		log.Fatal(err)
@@ -272,6 +361,5 @@ if err = filterCursor.All(Ctx, &posts); err != nil {
 }
 fmt.Println(" Post by ID checkpoint hit")
 	json.NewEncoder(w).Encode(posts)
-fmt.Println(posts)
 }
 
