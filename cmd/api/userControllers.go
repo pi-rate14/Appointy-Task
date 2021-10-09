@@ -46,7 +46,16 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/users/")
 	objectId,err := strconv.Atoi(id)
 	if err != nil{
-		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		resp := make(map[string]string)
+		resp["message"] = "Bad Request. ID invalid."
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+		return
 	}
 	err = UsersCollection.
 		FindOne(Ctx, bson.D{{Key:"_id",Value: objectId}}).

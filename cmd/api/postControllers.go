@@ -27,7 +27,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) (string, error) {
 	// 	CreatedAt: time.Now(),
 	// 	UserId: ID.userId,
 	// }
-	
+
 	var post Post
 	post.ID = ID.postId
 	post.UserId = ID.userId
@@ -103,7 +103,16 @@ func FindUserPosts(w http.ResponseWriter, r *http.Request)  {
 	}
 	user_id,err := strconv.Atoi(id)
 	if err != nil{
-		log.Fatal(err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		resp := make(map[string]string)
+		resp["message"] = "Bad Request. ID invalid."
+		jsonResp, err := json.Marshal(resp)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+		}
+		w.Write(jsonResp)
+		return
 	}
 	filterCursor, err := PostsCollection.Find(Ctx, bson.M{"user_id": user_id}, findOptions)
 if err != nil {
