@@ -78,7 +78,7 @@ Returns the details of a user in json format
   **Content:**
   ```go
   {
-   "ID": 1,
+    "ID": 1,
   	"Name": "Apoorva Srivastava",
   	"Email": "apoorvasrivastava.14@gmail.com",
   	"Password":"53+��3�蟼�ݎ5,�\n�~�7����޷\f�"
@@ -153,7 +153,7 @@ Returns the details of a post in json format
   **Content:**
   ```go
   {
-   "ID": 1,
+    "ID": 1,
   	"Caption": "Test Caption",
   	"ImageURL": "www.google.com",
   	"CreatedAt": "2021-10-08T23:58:26.188Z",
