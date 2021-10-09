@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+/* Global ID struct to assign User and Post IDs*/
+
 type GlobalID struct {
 	userId int
 	postId int
@@ -12,21 +14,14 @@ type GlobalID struct {
 
 var ID GlobalID
 
+// sync.Mutex type object to make server thread safe
 var lock sync.Mutex
 
 func main() {
+	/*Initiating Mongo DB connection*/
 	client := openDB()
 	defer CloseClientDB(client)	
+	/*handling requests*/
 	handleRequests()
 	time.Sleep(3 * time.Second)
-
-	// CreateUser(w, r)
-	// CreatePost(post)
-	// CreatePost(post)
-	// CreateUser(user)
-	// CreatePost(post)
-
-	// fmt.Println(GetUsers())
-	// fmt.Println(GetPosts())
-	//FindUserPosts(2)
 }

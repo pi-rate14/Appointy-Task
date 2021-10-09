@@ -8,11 +8,12 @@ import (
 	"time"
 )
 
-
+/*Handler for 404 errors*/
 func handle404(w http.ResponseWriter, r *http.Request){
 	fmt.Fprint(w,"404 not found")
 }
 
+/*Handle main routing requests*/
 func handleRequests() {
 	lock.Lock()
     defer lock.Unlock()
@@ -26,6 +27,7 @@ func handleRequests() {
 	time.Sleep(1 * time.Microsecond)
 }
 
+/*Handler to handle POST request /users */
 func handleUsers(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
@@ -45,6 +47,7 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*Handler to handle POST request /posts */
 func handlePosts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":

@@ -13,9 +13,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
+/*POST request 		Create a Post*/
 func CreatePost(w http.ResponseWriter, r *http.Request) (string, error) {
+	/*setting the Post ID*/
 	setIDS()
+
+	/* temporary user entry to seed database */
+
 	// post := Post {
 	// 	ID: ID.postId,
 	// 	Caption: "Test Caption",
@@ -23,6 +27,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) (string, error) {
 	// 	CreatedAt: time.Now(),
 	// 	UserId: ID.userId,
 	// }
+	
 	var post Post
 	post.ID = ID.postId
 	post.UserId = ID.userId
@@ -34,6 +39,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) (string, error) {
 	return 	fmt.Sprintf("%v", result.InsertedID), err
 }
 
+/* GET Request		Get one Post using ID*/
 func GetPost(w http.ResponseWriter, r *http.Request) {
 	var post Post
 	id := strings.TrimPrefix(r.URL.Path, "/posts/")
@@ -63,28 +69,7 @@ func GetPost(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 
-func GetPosts() ([]Post, error) {
-	var post Post
-	var posts []Post
-
-	cursor, err := PostsCollection.Find(Ctx, bson.D{})
-	if err != nil {
-		defer cursor.Close(Ctx)
-		return posts, err
-	}
-
-	for cursor.Next(Ctx) {
-		err := cursor.Decode(&post)
-		if err != nil {
-			return posts,err
-		}
-		posts = append(posts, post)
-	}
-
-	return posts, nil
-}
-
-
+/*GET request		Get all posts by a user using user ID */
 func FindUserPosts(w http.ResponseWriter, r *http.Request)  {
 	query := r.URL.Query()
 	
@@ -130,3 +115,27 @@ if err = filterCursor.All(Ctx, &posts); err != nil {
 fmt.Println(" Post by User ID checkpoint hit")
 	json.NewEncoder(w).Encode(posts)
 }
+
+/* Function to get all posts
+
+func GetPosts() ([]Post, error) {
+	var post Post
+	var posts []Post
+
+	cursor, err := PostsCollection.Find(Ctx, bson.D{})
+	if err != nil {
+		defer cursor.Close(Ctx)
+		return posts, err
+	}
+
+	for cursor.Next(Ctx) {
+		err := cursor.Decode(&post)
+		if err != nil {
+			return posts,err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
+*/

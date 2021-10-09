@@ -11,9 +11,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-
+/*POST request 		Create an User*/
 func CreateUser(w http.ResponseWriter, r *http.Request) {
+	/*setting the user ID*/
 	setIDS()
+
+	/* temporary user entry to seed database */
+
 	//var user User
 	// user := User {
 	// 		ID: ID.userId,
@@ -21,8 +25,10 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// 		Email: "apoorvasrivastava.14@gmail.com",
 	// 		Password: "password",
 	// 	}
+
 	var user User
 	user.ID = ID.userId
+	/*encryptng user password*/
 	md5Key := createHash(user.Email)
 	hashedPassword := encrypt([]byte(user.Password),md5Key)
 	user.Password = string(hashedPassword)
@@ -34,6 +40,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result.InsertedID)
 }
 
+/* GET Request		Get one User using ID*/
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	id := strings.TrimPrefix(r.URL.Path, "/users/")
@@ -51,6 +58,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	
 	json.NewEncoder(w).Encode(user)
 }
+
+/*function to get all the users from the database */
 
 // func GetUsers(w http.ResponseWriter, r *http.Request)  {
 // 	var user User
