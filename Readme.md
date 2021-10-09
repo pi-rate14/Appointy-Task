@@ -5,6 +5,17 @@
 3. Pagination with 2 results per page
 4. Clean, well documented, resuable, and scalable code
 
+# Steps to run
+
+1. Git clone https://github.com/pi-rate14/Appointy-Task.git
+2. cd into Project Directory "Appointy-Task"
+3. > go build cmd/api/\*.go
+4. > go run cmd/api/\*.go
+5. Server listens on localhost:8081
+
+- **To run tests**
+  > go test
+
 # Endpoints
 
 ## **Create a User**
