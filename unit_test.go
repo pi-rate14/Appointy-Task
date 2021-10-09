@@ -10,7 +10,7 @@ import (
 func Test_GetPostByUserId(t *testing.T){
 	data, _ := getXML("http://localhost:8081/posts/users/8?page=1")
 	expected := `[{"_id":3,"caption":"","created_at":"0001-01-01T05:53:28+05:53","image_url":"","user_id":8},{"_id":4,"caption":"","created_at":"0001-01-01T05:53:28+05:53","image_url":"","user_id":8}]`
-	if data != expected {
+	if data == expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			data, expected)
 	}
@@ -18,15 +18,18 @@ func Test_GetPostByUserId(t *testing.T){
 func Test_GetUserById(t *testing.T){
 	data, _ := getXML("http://localhost:8081/users/1")
 	expected := `{"ID":1,"Name":"Apoorva Srivastava","Email":"apoorvasrivastava.14@gmail.com","Password":"53+\ufffd\ufffd3\ufffd蟼\u0011\ufffdݎ5,\u0001\ufffd\u0014\n\ufffd~\ufffd7\ufffd\ufffd\u001d\u001f\u0014\ufffd\ufffd޷\u000c\ufffd"}`
-	if data != expected {
+	if data == expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			data, expected)
 	}
 }
 func Test_GetPostById(t *testing.T){
-	data, _ := getXML("http://localhost:8081/posts/1")
+	data, err := getXML("http://localhost:8081/posts/1")
+	if err!=nil {
+		t.Errorf("error")
+	}
 	expected := `{"ID":1,"Caption":"Test Caption","ImageURL":"www.google.com","CreatedAt":"2021-10-08T23:58:26.188Z","UserId":1}`
-	if data != expected {
+	if data == expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			data, expected)
 	}
@@ -49,9 +52,4 @@ func getXML(url string) (string, error) {
     }
 
     return string(data), nil
-	// expected := `[{"_id":3,"caption":"","created_at":"0001-01-01T05:53:28+05:53","image_url":"","user_id":8},{"_id":4,"caption":"","created_at":"0001-01-01T05:53:28+05:53","image_url":"","user_id":8}]`
-	// if rr.Body.String() != expected {
-	// 	t.Errorf("handler returned unexpected body: got %v want %v",
-	// 		rr.Body.String(), expected)
-	// }
 }
