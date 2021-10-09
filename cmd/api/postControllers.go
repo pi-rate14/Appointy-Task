@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 
@@ -22,7 +24,9 @@ func CreatePost(w http.ResponseWriter, r *http.Request) (string, error) {
 	// 	UserId: ID.userId,
 	// }
 	var post Post
+	post.ID = ID.postId
 	post.UserId = ID.userId
+	post.CreatedAt = time.Now()
 	result, err := PostsCollection.InsertOne(Ctx, post)
 	if err != nil {
 		return "0", err
@@ -81,31 +85,23 @@ func GetPosts() ([]Post, error) {
 }
 
 
-
-// func FindUserPosts(user_id int) ([]Post, error) {
-// 	matchStage := bson.D{{"$match", bson.D{{"user_id", user_id}}}}
-
-// 	lookupStage := bson.D{{"$lookup",
-// 		bson.D{{"from", "Posts"},
-// 			{"localField", "_id"},
-// 			{"foreignField", "user_id"},
-// 			{"as", "Posts"}}}}
-
-// 	showLoadedCursor, err := PostsCollection.Aggregate(Ctx,
-// 		mongo.Pipeline{matchStage, lookupStage})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var a []AuthorBooks
-// 	if err = showLoadedCursor.All(Ctx, &a); err != nil {
-// 		return nil, err
-
-// 	}
-// 	return a[0].Posts, err
-// }
-
 func FindUserPosts(w http.ResponseWriter, r *http.Request)  {
+	query := r.URL.Query()
+	
+	var page int
+	filters,ok := query["page"] 
+    if len(filters) == 0 || !ok{
+		query.Set("page","1")
+		filters = query["page"] 
+    }
+	findOptions := options.Find()
+	page,err := strconv.Atoi(filters[0]) 
+	var limit int64 = 2
+	if err != nil{
+		fmt.Println(err)
+	}
+	findOptions.SetSkip((int64(page) - 1) * limit)
+	findOptions.SetLimit(limit)
 	var posts []bson.M
 	id := strings.TrimPrefix(r.URL.Path, "/posts/users/")
 	if id == "" {
@@ -124,14 +120,13 @@ func FindUserPosts(w http.ResponseWriter, r *http.Request)  {
 	if err != nil{
 		log.Fatal(err)
 	}
-	filterCursor, err := PostsCollection.Find(Ctx, bson.M{"user_id": user_id})
+	filterCursor, err := PostsCollection.Find(Ctx, bson.M{"user_id": user_id}, findOptions)
 if err != nil {
     log.Fatal(err)
 }
-//var episodesFiltered []bson.M
 if err = filterCursor.All(Ctx, &posts); err != nil {
     log.Fatal(err)
 }
-fmt.Println(" Post by ID checkpoint hit")
+fmt.Println(" Post by User ID checkpoint hit")
 	json.NewEncoder(w).Encode(posts)
 }
